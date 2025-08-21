@@ -55,16 +55,16 @@ You'll be prompted for:
 ```
 
 🧠 Recommended Workflow
-    - Provision a fresh AlmaLinux VPS
-    - Run the harden.sh script remotely as root
-    - SSH in using password and randomized port
-    * Optional: Run the harden-ssh.sh script to install your public key and disable password login
-    * Optional: Run the setup-alias.sh script locally to create a shortcut for future access
+- Provision a fresh AlmaLinux VPS
+- Run the harden.sh script remotely as root
+- SSH in using password and randomized port
+* Optional: Run the harden-ssh.sh script to install your public key and disable password login
+* Optional: Run the setup-alias.sh script locally to create a shortcut for future access
 
 📌 Notes
-    - All scripts are modular and safe to run independently
-    - No secrets or sensitive data are stored in this repo
-    - You can customize identity files, alias formats, and SSH options as needed
+- All scripts are modular and safe to run independently
+- No secrets or sensitive data are stored in this repo
+- You can customize identity files, alias formats, and SSH options as needed
 
 🔗 Learn More
 Created by Mark Hart — technical architect focused on secure, scalable infrastructure automation.
