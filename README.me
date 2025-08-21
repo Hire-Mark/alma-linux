@@ -1,4 +1,3 @@
-markdown
 # 🛡️ AlmaLinux Server Bootstrap Toolkit
 
 This repo contains modular scripts for securely provisioning and accessing AlmaLinux VPS instances. Each module is designed to be run remotely via a single command, making onboarding fast, repeatable, and secure.
@@ -7,9 +6,15 @@ This repo contains modular scripts for securely provisioning and accessing AlmaL
 
 ## 📁 Repo Structure
 
-alma-linux/ ├── alma-harden/ # Initial OS hardening with password login │ └── harden.sh ├── alma-harden-ssh/ # SSH key setup and password login disablement │ ├── harden-ssh.sh │ └── README.md ├── alma-ssh-alias/ # Local SSH alias creation for easy access │ ├── setup-alias.sh │ └── README.md
-
-Code
+alma-linux/ 
+├── alma-harden/ # Initial OS hardening with password login 
+│ └── harden.sh 
+├── alma-harden-ssh/ # SSH key setup and password login disablement 
+│ ├── harden-ssh.sh 
+│ └── README.md 
+├── alma-ssh-alias/ # Local SSH alias creation for easy access 
+│ ├── setup-alias.sh 
+│ └── README.md
 
 ---
 
@@ -22,6 +27,7 @@ Creates a new admin user, randomizes SSH port, disables root login, and enables 
 ```
 bash <(curl -s https://raw.githubusercontent.com/hire-mark/alma-linux/main/alma-harden/harden.sh)
 ```
+
 After running, you'll see connection info like:
 
 ```
