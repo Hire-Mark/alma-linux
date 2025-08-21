@@ -20,39 +20,39 @@ alma-linux/
 
 ### 🔧 1. Initial Hardening (Run as root on fresh AlmaLinux VPS)
 
-    Creates a new admin user, randomizes SSH port, disables root login, and enables password login.
+Creates a new admin user, randomizes SSH port, disables root login, and enables password login.
 
-    ```
-    bash <(curl -s https://raw.githubusercontent.com/hire-mark/alma-linux/main/alma-harden/harden.sh)
-    ```
+```
+bash <(curl -s https://raw.githubusercontent.com/hire-mark/alma-linux/main/alma-harden/harden.sh)
+```
 
-    After running, you'll see connection info like:
+After running, you'll see connection info like:
 
-    ```
-    ssh -p <random-port> <admin-user>@<server-ip>
-    ```
+```
+ssh -p <random-port> <admin-user>@<server-ip>
+```
 ### 🔐 2. SSH Key Setup (Run after hardening, logged in as admin user)
-    Installs your public SSH key and disables password login for secure access.
+Installs your public SSH key and disables password login for secure access.
 
-    ```
-    bash <(curl -s https://raw.githubusercontent.com/hire-mark/alma-linux/main/alma-harden-ssh/harden-ssh.sh)
-    ```
+```
+bash <(curl -s https://raw.githubusercontent.com/hire-mark/alma-linux/main/alma-harden-ssh/harden-ssh.sh)
+```
 
-    Make sure you've generated your SSH key locally first. See alma-harden-ssh/README.md for instructions.
+Make sure you've generated your SSH key locally first. See alma-harden-ssh/README.md for instructions.
 
 ### 🧭 3. SSH Alias Setup (Run locally on your dev machine)
-    Creates a shortcut in your ~/.ssh/config so you can connect using a simple alias like ssh hire-mark.
+Creates a shortcut in your ~/.ssh/config so you can connect using a simple alias like ssh hire-mark.
 
-    ```
-    bash <(curl -s https://raw.githubusercontent.com/hire-mark/alma-linux/main/alma-ssh-alias/setup-alias.sh)
-    ```
-    You'll be prompted for:
-    ```
-        Server IP
-        SSH port
-        Username
-        Optional alias name
-    ```
+```
+bash <(curl -s https://raw.githubusercontent.com/hire-mark/alma-linux/main/alma-ssh-alias/setup-alias.sh)
+```
+You'll be prompted for:
+```
+    Server IP
+    SSH port
+    Username
+    Optional alias name
+```
 
 🧠 Recommended Workflow
     Provision a fresh AlmaLinux VPS
