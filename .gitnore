@@ -1,0 +1,4 @@
+*.log
+*.swp
+*.bak
+ssh_port.txt
