@@ -18,7 +18,7 @@ alma-linux/<br>
 
 ## 🚀 One-Liner Remote Installs
 
-### 🔧 1. Initial Hardening (Run as root on fresh AlmaLinux VPS)
+## 🔧 Initial Hardening (Run as root on fresh AlmaLinux VPS)
 
 Creates a new admin user, randomizes SSH port, disables root login, and enables password login.
 
@@ -31,7 +31,7 @@ After running, you'll see connection info like:
 ```
 ssh -p <random-port> <admin-user>@<server-ip>
 ```
-### 🔐 2. SSH Key Setup (Run after hardening, logged in as admin user)
+## 🔐 SSH Key Setup (Run after hardening, logged in as admin user)
 Installs your public SSH key and disables password login for secure access.
 
 ```
@@ -40,7 +40,7 @@ bash <(curl -s https://raw.githubusercontent.com/hire-mark/alma-linux/main/alma-
 
 Make sure you've generated your SSH key locally first. See alma-harden-ssh/README.md for instructions.
 
-### 🧭 3. SSH Alias Setup (Run locally on your dev machine)
+## 🧭 SSH Alias Setup (Run locally on your dev machine)
 Creates a shortcut in your ~/.ssh/config so you can connect using a simple alias like ssh hire-mark.
 
 ```
@@ -55,16 +55,16 @@ You'll be prompted for:
 ```
 
 🧠 Recommended Workflow
-- Provision a fresh AlmaLinux VPS
-- Run the harden.sh script remotely as root
-- SSH in using password and randomized port
-* Optional: Run the harden-ssh.sh script to install your public key and disable password login
-* Optional: Run the setup-alias.sh script locally to create a shortcut for future access
+- Provision a fresh AlmaLinux VPS<br>
+- Run the harden.sh script remotely as root<br>
+- SSH in using password and randomized port<br>
+* Optional: Run the harden-ssh.sh script to install your public key and disable password login<br>
+* Optional: Run the setup-alias.sh script locally to create a shortcut for future access<br>
 
 📌 Notes
-- All scripts are modular and safe to run independently
-- No secrets or sensitive data are stored in this repo
-- You can customize identity files, alias formats, and SSH options as needed
+- All scripts are modular and safe to run independently<br>
+- No secrets or sensitive data are stored in this repo<br>
+- You can customize identity files, alias formats, and SSH options as needed<br>
 
 🔗 Learn More
-Created by Mark Hart — technical architect focused on secure, scalable infrastructure automation.
+Created by Mark Hart — technical architect focused on secure, scalable infrastructure automation.<br>
