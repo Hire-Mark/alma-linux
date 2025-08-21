@@ -2,18 +2,17 @@
 
 This repo contains modular scripts for securely provisioning and accessing AlmaLinux VPS instances. Each module is designed to be run remotely via a single command, making onboarding fast, repeatable, and secure.
 
----
 
 ## 📁 Repo Structure
 
-alma-linux/ 
-├── alma-harden/ # Initial OS hardening with password login 
-│ └── harden.sh 
-├── alma-harden-ssh/ # SSH key setup and password login disablement 
-│ ├── harden-ssh.sh 
-│ └── README.md 
-├── alma-ssh-alias/ # Local SSH alias creation for easy access 
-│ ├── setup-alias.sh 
+alma-linux/
+├── alma-harden/ # Initial OS hardening with password login
+│ └── harden.sh
+├── alma-harden-ssh/ # SSH key setup and password login disablement
+│ ├── harden-ssh.sh
+│ └── README.md
+├── alma-ssh-alias/ # Local SSH alias creation for easy access
+│ ├── setup-alias.sh
 │ └── README.md
 
 
@@ -31,8 +30,8 @@ alma-linux/
 
     ```
     ssh -p <random-port> <admin-user>@<server-ip>
-```
-🔐 2. SSH Key Setup (Run after hardening, logged in as admin user)
+    ```
+### 🔐 2. SSH Key Setup (Run after hardening, logged in as admin user)
     Installs your public SSH key and disables password login for secure access.
 
     ```
@@ -41,7 +40,7 @@ alma-linux/
 
     Make sure you've generated your SSH key locally first. See alma-harden-ssh/README.md for instructions.
 
-🧭 3. SSH Alias Setup (Run locally on your dev machine)
+### 🧭 3. SSH Alias Setup (Run locally on your dev machine)
     Creates a shortcut in your ~/.ssh/config so you can connect using a simple alias like ssh hire-mark.
 
     ```
@@ -53,7 +52,7 @@ alma-linux/
         SSH port
         Username
         Optional alias name
-```
+    ```
 
 🧠 Recommended Workflow
     Provision a fresh AlmaLinux VPS
