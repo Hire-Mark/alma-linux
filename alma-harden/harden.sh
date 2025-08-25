@@ -129,8 +129,8 @@ prompt_for_ssh_port
 setup_user
 harden_ssh
 setup_firewall
-install_cockpit
-install_certbot_nginx
-install_docker_stack
-install_nginx_proxy
+# install_cockpit
+# install_certbot_nginx
+# install_docker_stack
+# install_nginx_proxy
 show_connection_info

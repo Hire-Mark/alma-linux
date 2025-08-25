@@ -1,17 +1,28 @@
-# AlmaLinux Hardening Script
+# AlmaLinux Server Setup
 
-This script sets up a secure AlmaLinux VM with:
 
-- New admin user
-- Randomized SSH port
-- Password login enabled
-- Root login disabled
+## AlmaLinux Hardening & Full Install Scripts
+
+This repo provides two scripts:
+
+- `harden.sh`: OS hardening (user, SSH, firewall, etc.)
+- `multi-tenant-container-stack-install.sh`: Installs and configures containers, reverse proxy, and tenant structure
 
 ## Usage
 
-Run this one-liner on a fresh VM:
-
+**1. Harden your AlmaLinux server (run first):**
 ```bash
 bash <(curl -s https://raw.githubusercontent.com/hire-mark/alma-harden/main/harden.sh)
+```
+
+**2. Install and configure containers (run after hardening):**
+```bash
+bash <(curl -s https://raw.githubusercontent.com/hire-mark/alma-harden/main/harden-full-install.sh)
+```
+
+**Combined one-liner:**
+```bash
+bash <(curl -s https://raw.githubusercontent.com/hire-mark/alma-harden/main/harden.sh) && bash <(curl -s https://raw.githubusercontent.com/hire-mark/alma-harden/main/harden-full-install.sh)
+```
 
 
