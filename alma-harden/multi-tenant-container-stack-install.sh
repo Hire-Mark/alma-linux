@@ -161,17 +161,17 @@ server {
   }
 }
 EOF
-  cat > "$NGINX_CONF_DIR/cockpit.conf" <<EOF
-server {
-  listen 80;
-  server_name cockpit.$BASE_DOMAIN;
-  location / {
-    proxy_pass http://cockpit:9090;
-    proxy_set_header Host \$host;
-    proxy_set_header X-Real-IP \$remote_addr;
-  }
-}
-EOF
+#  cat > "$NGINX_CONF_DIR/cockpit.conf" <<EOF
+#server {
+# listen 80;
+#  server_name cockpit.$BASE_DOMAIN;
+#  location / {
+#    proxy_pass http://cockpit:9090;
+#    proxy_set_header Host \$host;
+#    proxy_set_header X-Real-IP \$remote_addr;
+#  }
+#}
+#EOF
 }
 
 function configure_homarr() {
