@@ -8,6 +8,7 @@ This repo contains modular scripts for securely provisioning and accessing AlmaL
 alma-linux/<br>
 ├── alma-harden/ # Initial OS hardening with password login<br>
 │ └── harden.sh<br>
+│ └── multi-tenant-container-stack-install.sh<br>
 ├── alma-harden-ssh/ # SSH key setup and password login disablement<br>
 │ ├── harden-ssh.sh<br>
 │ └── README.md<br>

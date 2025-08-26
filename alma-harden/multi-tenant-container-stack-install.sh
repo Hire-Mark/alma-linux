@@ -150,26 +150,26 @@ EOF
 
 function configure_nginx_for_services() {
     log "Configuring NGINX for service routing..."
-    cat > "$NGINX_CONF_DIR/homarr.conf" <<EOF
+  cat > "$NGINX_CONF_DIR/homarr.conf" <<EOF
 server {
-    listen 80;
-    server_name $BASE_DOMAIN;
-    location / {
-        proxy_pass http://homarr:7575;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
+  listen 80;
+  server_name $BASE_DOMAIN;
+  location / {
+    proxy_pass http://homarr:7575;
+    proxy_set_header Host \$host;
+    proxy_set_header X-Real-IP \$remote_addr;
+  }
 }
 EOF
-    cat > "$NGINX_CONF_DIR/cockpit.conf" <<EOF
+  cat > "$NGINX_CONF_DIR/cockpit.conf" <<EOF
 server {
-    listen 80;
-    server_name cockpit.$BASE_DOMAIN;
-    location / {
-        proxy_pass http://cockpit:9090;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
+  listen 80;
+  server_name cockpit.$BASE_DOMAIN;
+  location / {
+    proxy_pass http://cockpit:9090;
+    proxy_set_header Host \$host;
+    proxy_set_header X-Real-IP \$remote_addr;
+  }
 }
 EOF
 }
@@ -201,15 +201,15 @@ services:
       - "8080:80"
     restart: always
 EOF
-      cat > "$TENANTS_DIR/$t/nginx.conf" <<EOF
+    cat > "$TENANTS_DIR/$t/nginx.conf" <<EOF
 server {
-    listen 80;
-    server_name $t;
-    location / {
-        proxy_pass http://web:80;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
+  listen 80;
+  server_name $t;
+  location / {
+    proxy_pass http://web:80;
+    proxy_set_header Host \$host;
+    proxy_set_header X-Real-IP \$remote_addr;
+  }
 }
 EOF
     done
