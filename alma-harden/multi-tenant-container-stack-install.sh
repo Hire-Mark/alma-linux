@@ -218,7 +218,7 @@ EOF
 function show_connection_info() {
     echo -e "\n✅ Hardened and ready!"
     echo "Homarr: https://$BASE_DOMAIN"
-    echo "Cockpit: https://cockpit.$BASE_DOMAIN"
+    echo "Cockpit: https://$BASE_DOMAIN:9090"
     echo "Portainer: https://$BASE_DOMAIN:9443"
     echo "Dockge: https://$BASE_DOMAIN:5001"
     echo "PBX: https://$BASE_DOMAIN:5060"

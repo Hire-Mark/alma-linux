@@ -119,9 +119,7 @@ function show_connection_info() {
     echo -e "\n✅ Hardened and ready for password login!"
     echo "Connect using:"
     echo "ssh -p $SSH_PORT $NEW_USER@$IP"
-    echo "Cockpit GUI available at: https://$IP:$COPILOT_PORT"
     echo -e "\n🌐 Point your domain's A record to: $IP"
-    echo "Then update NGINX config at $NGINX_CONF_DIR to route traffic to your containers."
 }
 
 # === MAIN ===
