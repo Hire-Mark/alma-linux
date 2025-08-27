@@ -362,10 +362,10 @@ function show_connection_info() {
 
 
 # === MAIN ===
-install_docker_stack
-setup_directories
 prompt_for_base_domain
 prompt_for_tenant_domains
+install_docker_stack
+setup_directories
 deploy_reverse_proxy
 deploy_homarr
 # deploy_cockpit - 8.26 moved to harden.sh as part of inital server setup
