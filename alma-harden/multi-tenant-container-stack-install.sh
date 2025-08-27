@@ -254,13 +254,7 @@ function show_connection_info() {
   echo "Then use Certbot to generate SSL certificates for your domains."
 }
 
-deploy_portainer
-deploy_dockge
-deploy_pbx
-configure_nginx_for_services
-configure_homarr
-deploy_tenants_example
-show_connection_info
+
 # === MAIN ===
 install_docker_stack
 setup_directories
