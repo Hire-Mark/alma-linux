@@ -126,22 +126,17 @@ services:
 EOF
 }
 
-function deploy_portainer() {
-    log "Deploying Portainer..."
-    cat > "$PORTAINER_DIR/docker-compose.yml" <<EOF
-version: '3.8'
-services:
-  portainer:
-    image: portainer/portainer-ce:latest
-    container_name: portainer
-    ports:
-      - "9443:9443"
-      - "9000:9000"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./data:/data
-    restart: always
-EOF
+install_portainer() {
+    log "Installing Portainer on the host..."
+    docker volume create portainer_data
+    docker run -d \
+      -p 9443:9443 -p 9000:9000 \
+      --name=portainer \
+      --restart=always \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      -v portainer_data:/data \
+      portainer/portainer-ce:latest
+    log "Portainer installed and running on the host."
 }
 
 function deploy_dockge() {
@@ -262,8 +257,9 @@ prompt_for_base_domain
 prompt_for_tenant_domains
 deploy_reverse_proxy
 deploy_homarr
+
 # deploy_cockpit - 8.26 moved to harden.sh as part of inital server setup
-deploy_portainer
+install_portainer
 deploy_dockge
 deploy_pbx
 configure_nginx_for_services
