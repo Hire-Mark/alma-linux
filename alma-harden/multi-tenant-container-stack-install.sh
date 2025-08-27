@@ -3,9 +3,35 @@
 set -euo pipefail
 
 # === CONFIGURATION ===
-VPS_IP="66.94.125.185"
-BASE_DOMAIN="vps.hire-mark.com"
-TENANT_DOMAINS=(lab.hire-mark.com tnt.h3webelements.com beta.h3webelements.com)
+# Default base domain
+DEFAULT_BASE_DOMAIN="vps.hire-mark.com"
+
+# Prompt for base domain at runtime
+function prompt_for_base_domain() {
+  read -p "Please enter the primary domain to configure for this server (e.g. example.com) [default: $DEFAULT_BASE_DOMAIN]: " INPUT_DOMAIN
+  if [[ -z "$INPUT_DOMAIN" ]]; then
+    BASE_DOMAIN="$DEFAULT_BASE_DOMAIN"
+  else
+    BASE_DOMAIN="$INPUT_DOMAIN"
+  fi
+  log "Using base domain: $BASE_DOMAIN"
+}
+# Default tenant domains
+DEFAULT_TENANT_DOMAINS=(lab.hire-mark.com tnt.h3webelements.com beta.h3webelements.com)
+
+# Prompt for tenant domains at runtime
+function prompt_for_tenant_domains() {
+  read -p "Enter tenant domains (comma-separated, or leave blank for default: ${DEFAULT_TENANT_DOMAINS[*]}): " DOMAINS_INPUT
+  if [[ -z "$DOMAINS_INPUT" ]]; then
+    TENANT_DOMAINS=("${DEFAULT_TENANT_DOMAINS[@]}")
+  else
+    IFS=',' read -ra TENANT_DOMAINS <<< "$DOMAINS_INPUT"
+    # Trim whitespace
+    for i in "${!TENANT_DOMAINS[@]}"; do
+      TENANT_DOMAINS[$i]="$(echo ${TENANT_DOMAINS[$i]} | xargs)"
+    done
+  fi
+}
 CONTAINERS_DIR="/containers"
 REVERSE_PROXY_DIR="$CONTAINERS_DIR/reverse-proxy"
 HOMARR_DIR="$CONTAINERS_DIR/homarr"
@@ -217,19 +243,29 @@ EOF
 }
 
 function show_connection_info() {
-    echo -e "\n✅ Hardened and ready!"
-    echo "Homarr: https://$BASE_DOMAIN"
-    echo "Cockpit: https://$BASE_DOMAIN:9090"
-    echo "Portainer: https://$BASE_DOMAIN:9443"
-    echo "Dockge: https://$BASE_DOMAIN:5001"
-    echo "PBX: https://$BASE_DOMAIN:5060"
-    echo -e "\n🌐 Point your domain's A record to: $VPS_IP"
-    echo "Then use Certbot to generate SSL certificates for your domains."
+  echo -e "\n✅ Hardened and ready!"
+  echo "Homarr: https://$BASE_DOMAIN"
+  echo "Cockpit: https://$BASE_DOMAIN:9090"
+  echo "Portainer: https://$BASE_DOMAIN:9443"
+  echo "Dockge: https://$BASE_DOMAIN:5001"
+  echo "PBX: https://$BASE_DOMAIN:5060"
+  IP=$(curl -4 -s ifconfig.me)
+  echo -e "\n🌐 Point your domain's A record to: $IP"
+  echo "Then use Certbot to generate SSL certificates for your domains."
 }
 
+deploy_portainer
+deploy_dockge
+deploy_pbx
+configure_nginx_for_services
+configure_homarr
+deploy_tenants_example
+show_connection_info
 # === MAIN ===
 install_docker_stack
 setup_directories
+prompt_for_base_domain
+prompt_for_tenant_domains
 deploy_reverse_proxy
 deploy_homarr
 # deploy_cockpit - 8.26 moved to harden.sh as part of inital server setup
