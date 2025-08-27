@@ -5,6 +5,7 @@ set -euo pipefail
 # === CONFIGURATION ===
 VPS_IP="66.94.125.185"
 BASE_DOMAIN="vps.hire-mark.com"
+TENANT_DOMAINS=(lab.hire-mark.com tnt.h3webelements.com beta.h3webelements.com)
 CONTAINERS_DIR="/containers"
 REVERSE_PROXY_DIR="$CONTAINERS_DIR/reverse-proxy"
 HOMARR_DIR="$CONTAINERS_DIR/homarr"
@@ -190,8 +191,8 @@ EOF
 
 function deploy_tenants_example() {
     log "Creating example tenant folders and configs..."
-    mkdir -p "$TENANTS_DIR/lab.hire-mark.com" "$TENANTS_DIR/tnt.h3webelements.com" "$TENANTS_DIR/beta.h3webelements.com"
-    for t in lab.hire-mark.com tnt.h3webelements.com beta.h3webelements.com; do
+    for t in "${TENANT_DOMAINS[@]}"; do
+      mkdir -p "$TENANTS_DIR/$t"
       cat > "$TENANTS_DIR/$t/docker-compose.yml" <<EOF
 version: '3.8'
 services:
@@ -201,7 +202,7 @@ services:
       - "8080:80"
     restart: always
 EOF
-    cat > "$TENANTS_DIR/$t/nginx.conf" <<EOF
+      cat > "$TENANTS_DIR/$t/nginx.conf" <<EOF
 server {
   listen 80;
   server_name $t;
@@ -231,7 +232,7 @@ install_docker_stack
 setup_directories
 deploy_reverse_proxy
 deploy_homarr
-deploy_cockpit
+# deploy_cockpit - 8.26 moved to harden.sh as part of inital server setup
 deploy_portainer
 deploy_dockge
 deploy_pbx

@@ -25,4 +25,15 @@ bash <(curl -s https://raw.githubusercontent.com/hire-mark/alma-harden/main/hard
 bash <(curl -s https://raw.githubusercontent.com/hire-mark/alma-harden/main/harden.sh) && bash <(curl -s https://raw.githubusercontent.com/hire-mark/alma-harden/main/harden-full-install.sh)
 ```
 
+## Install script to build and launch the containers
+```
+install container lauch script
+sudo mkdir -p /opt/startup
+sudo curl -sSL https://raw.githubusercontent.com/hire-mark/alma-linux/main/alma-harden/containers-up.sh -o /opt/startup/containers-up.sh
+sudo chmod +x /opt/startup/containers-up.sh
 
+```
+**Run the script**
+```
+sudo /opt/startup/containers-up.sh
+```

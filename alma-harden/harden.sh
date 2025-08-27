@@ -115,10 +115,11 @@ EOF
 }
 
 function show_connection_info() {
-    IP=$(curl -s ifconfig.me)
+    IP=$(curl -4 -s ifconfig.me)
     echo -e "\n✅ Hardened and ready for password login!"
     echo "Connect using:"
     echo "ssh -p $SSH_PORT $NEW_USER@$IP"
+    echo "Cockpit GUI available at: https://$IP:$COPILOT_PORT"
     echo -e "\n🌐 Point your domain's A record to: $IP"
 }
 
@@ -127,7 +128,7 @@ prompt_for_ssh_port
 setup_user
 harden_ssh
 setup_firewall
-# install_cockpit
+install_cockpit
 # install_certbot_nginx
 # install_docker_stack
 # install_nginx_proxy
