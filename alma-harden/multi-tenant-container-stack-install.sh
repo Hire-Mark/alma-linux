@@ -53,12 +53,16 @@ function fail() {
 }
 
 function install_docker_stack() {
-    log "Installing Docker and Docker Compose..."
-    dnf install -y dnf-plugins-core
-    dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
-    dnf install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
-    systemctl enable --now docker
-    log "Docker installed."
+  if command -v docker >/dev/null 2>&1; then
+    log "Docker is already installed. Skipping."
+    return
+  fi
+  log "Installing Docker and Docker Compose..."
+  dnf install -y dnf-plugins-core
+  dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+  dnf install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+  systemctl enable --now docker
+  log "Docker installed."
 }
 
 function setup_directories() {
@@ -67,9 +71,13 @@ function setup_directories() {
 }
 
 function deploy_reverse_proxy() {
-    log "Deploying NGINX reverse proxy with Certbot..."
-    mkdir -p "$REVERSE_PROXY_DIR/nginx/conf.d"
-    cat > "$REVERSE_PROXY_DIR/docker-compose.yml" <<EOF
+  if docker ps --format '{{.Names}}' | grep -q '^reverse-proxy$'; then
+    log "Reverse proxy is already running. Skipping."
+    return
+  fi
+  log "Deploying NGINX reverse proxy with Certbot..."
+  mkdir -p "$REVERSE_PROXY_DIR/nginx/conf.d"
+  cat > "$REVERSE_PROXY_DIR/docker-compose.yml" <<EOF
 version: '3.8'
 services:
   nginx:
@@ -95,8 +103,12 @@ EOF
 }
 
 function deploy_homarr() {
-    log "Deploying Homarr..."
-    cat > "$HOMARR_DIR/docker-compose.yml" <<EOF
+  if docker ps --format '{{.Names}}' | grep -q '^homarr$'; then
+    log "Homarr is already running. Skipping."
+    return
+  fi
+  log "Deploying Homarr..."
+  cat > "$HOMARR_DIR/docker-compose.yml" <<EOF
 version: '3.8'
 services:
   homarr:
@@ -113,8 +125,12 @@ EOF
 }
 
 function deploy_cockpit() {
-    log "Deploying Cockpit (via podman/cockpit-ws)..."
-    cat > "$COCKPIT_DIR/docker-compose.yml" <<EOF
+  if docker ps --format '{{.Names}}' | grep -q '^cockpit$'; then
+    log "Cockpit is already running. Skipping."
+    return
+  fi
+  log "Deploying Cockpit (via podman/cockpit-ws)..."
+  cat > "$COCKPIT_DIR/docker-compose.yml" <<EOF
 version: '3.8'
 services:
   cockpit:
@@ -127,6 +143,10 @@ EOF
 }
 
 install_portainer() {
+    if docker ps --format '{{.Names}}' | grep -q '^portainer$'; then
+        log "Portainer is already running. Skipping."
+        return
+    fi
     log "Installing Portainer on the host..."
     docker volume create portainer_data
     docker run -d \
@@ -140,8 +160,12 @@ install_portainer() {
 }
 
 function deploy_dockge() {
-    log "Deploying Dockge..."
-    cat > "$DOCKGE_DIR/docker-compose.yml" <<EOF
+  if docker ps --format '{{.Names}}' | grep -q '^dockge$'; then
+    log "Dockge is already running. Skipping."
+    return
+  fi
+  log "Deploying Dockge..."
+  cat > "$DOCKGE_DIR/docker-compose.yml" <<EOF
 version: '3.8'
 services:
   dockge:
@@ -157,8 +181,12 @@ EOF
 }
 
 function deploy_pbx() {
-    log "Deploying FreePBX (tiredofit/freepbx)..."
-    cat > "$PBX_DIR/docker-compose.yml" <<EOF
+  if docker ps --format '{{.Names}}' | grep -q '^pbx$'; then
+    log "PBX is already running. Skipping."
+    return
+  fi
+  log "Deploying FreePBX (tiredofit/freepbx)..."
+  cat > "$PBX_DIR/docker-compose.yml" <<EOF
 version: '3.8'
 services:
   pbx:
@@ -272,8 +300,9 @@ function configure_homarr() {
       echo "  { \"name\": \"Portainer\", \"url\": \"https://portainer.$BASE_DOMAIN\" },"
       echo "  { \"name\": \"Dockge\",    \"url\": \"https://dockge.$BASE_DOMAIN\" },"
       echo "  { \"name\": \"PBX\",       \"url\": \"https://pbx.$BASE_DOMAIN\" }"
-      if [[ ${#TENANT_DOMAINS[@]} -gt 0 ]]; then
-        for t in "${TENANT_DOMAINS[@]}"; do
+      TENANTS_SAFE=("${TENANT_DOMAINS[@]:-}")
+      if [[ ${#TENANTS_SAFE[@]} -gt 0 && -n "${TENANTS_SAFE[0]}" ]]; then
+        for t in "${TENANTS_SAFE[@]}"; do
           echo ",  { \"name\": \"Tenant: $t\", \"url\": \"https://$t\" }"
         done
       fi
@@ -284,12 +313,17 @@ function configure_homarr() {
 function deploy_tenants_example() {
     log "Creating example tenant folders and configs..."
     for t in "${TENANT_DOMAINS[@]}"; do
+      if docker ps --format '{{.Names}}' | grep -q "^web-$t$"; then
+        log "Tenant web container for $t is already running. Skipping."
+        continue
+      fi
       mkdir -p "$TENANTS_DIR/$t"
       cat > "$TENANTS_DIR/$t/docker-compose.yml" <<EOF
 version: '3.8'
 services:
   web:
     image: nginx:alpine
+    container_name: web-$t
     ports:
       - "8080:80"
     restart: always
