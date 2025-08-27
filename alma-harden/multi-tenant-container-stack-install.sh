@@ -157,21 +157,31 @@ EOF
 }
 
 function deploy_pbx() {
-    log "Deploying PBX (placeholder)..."
+    log "Deploying FreePBX (tiredofit/freepbx)..."
     cat > "$PBX_DIR/docker-compose.yml" <<EOF
 version: '3.8'
 services:
   pbx:
-    image: placeholder/pbx:latest
+    image: tiredofit/freepbx:latest
     container_name: pbx
     ports:
-      - "5060:5060"
+      - "5060:5060/udp"
+      - "5160:5160/udp"
+      - "18000-18100:18000-18100/udp"
+      - "80:80"
+      - "443:443"
+    environment:
+      - RTP_START=18000
+      - RTP_FINISH=18100
+      - ASTERISK_VERSION=18
     restart: always
 EOF
 }
 
 function configure_nginx_for_services() {
     log "Configuring NGINX for service routing..."
+
+  # Homarr (main domain)
   cat > "$NGINX_CONF_DIR/homarr.conf" <<EOF
 server {
   listen 80;
@@ -183,31 +193,92 @@ server {
   }
 }
 EOF
-#  cat > "$NGINX_CONF_DIR/cockpit.conf" <<EOF
-#server {
-# listen 80;
-#  server_name cockpit.$BASE_DOMAIN;
-#  location / {
-#    proxy_pass http://cockpit:9090;
-#    proxy_set_header Host \$host;
-#    proxy_set_header X-Real-IP \$remote_addr;
-#  }
-#}
-#EOF
+
+  # Cockpit (subdomain)
+  cat > "$NGINX_CONF_DIR/cockpit.conf" <<EOF
+server {
+  listen 80;
+  server_name cockpit.$BASE_DOMAIN;
+  location / {
+    proxy_pass http://cockpit:9090;
+    proxy_set_header Host \$host;
+    proxy_set_header X-Real-IP \$remote_addr;
+  }
+}
+EOF
+
+  # Portainer (subdomain)
+  cat > "$NGINX_CONF_DIR/portainer.conf" <<EOF
+server {
+  listen 80;
+  server_name portainer.$BASE_DOMAIN;
+  location / {
+    proxy_pass http://localhost:9443;
+    proxy_set_header Host \$host;
+    proxy_set_header X-Real-IP \$remote_addr;
+  }
+}
+EOF
+
+  # Dockge (subdomain)
+  cat > "$NGINX_CONF_DIR/dockge.conf" <<EOF
+server {
+  listen 80;
+  server_name dockge.$BASE_DOMAIN;
+  location / {
+    proxy_pass http://dockge:5001;
+    proxy_set_header Host \$host;
+    proxy_set_header X-Real-IP \$remote_addr;
+  }
+}
+EOF
+
+  # PBX (subdomain)
+  cat > "$NGINX_CONF_DIR/pbx.conf" <<EOF
+server {
+  listen 80;
+  server_name pbx.$BASE_DOMAIN;
+  location / {
+    proxy_pass http://pbx:80;
+    proxy_set_header Host \$host;
+    proxy_set_header X-Real-IP \$remote_addr;
+  }
+}
+EOF
+
+  # Tenants (each on their own domain)
+  for t in "${TENANT_DOMAINS[@]}"; do
+    cat > "$NGINX_CONF_DIR/$t.conf" <<EOF
+server {
+  listen 80;
+  server_name $t;
+  location / {
+    proxy_pass http://web:80;
+    proxy_set_header Host \$host;
+    proxy_set_header X-Real-IP \$remote_addr;
+  }
+}
+EOF
+  done
 }
 
 function configure_homarr() {
     log "Configuring Homarr dashboard for service links..."
     mkdir -p "$HOMARR_DIR/data"
-    cat > "$HOMARR_DIR/data/services.json" <<EOF
-[
-  { "name": "Cockpit", "url": "https://cockpit.$BASE_DOMAIN" },
-  { "name": "Homarr", "url": "https://$BASE_DOMAIN" },
-  { "name": "Portainer", "url": "https://$BASE_DOMAIN:9443" },
-  { "name": "Dockge", "url": "https://$BASE_DOMAIN:5001" },
-  { "name": "PBX", "url": "https://$BASE_DOMAIN:5060" }
-]
-EOF
+    {
+      echo "["
+      echo "  { \"name\": \"Homarr\",    \"url\": \"https://$BASE_DOMAIN\" },"
+      echo "  { \"name\": \"Cockpit\",   \"url\": \"https://cockpit.$BASE_DOMAIN\" },"
+      echo "  { \"name\": \"Portainer\", \"url\": \"https://portainer.$BASE_DOMAIN\" },"
+      echo "  { \"name\": \"Dockge\",    \"url\": \"https://dockge.$BASE_DOMAIN\" },"
+      echo "  { \"name\": \"PBX\",       \"url\": \"https://pbx.$BASE_DOMAIN\" }"
+      if [[ ${#TENANT_DOMAINS[@]} -gt 0 ]]; then
+        for t in "${TENANT_DOMAINS[@]}"; do
+          echo ",  { \"name\": \"Tenant: $t\", \"url\": \"https://$t\" }"
+        done
+      fi
+      echo "]"
+    } > "$HOMARR_DIR/data/services.json"
 }
 
 function deploy_tenants_example() {
@@ -239,14 +310,20 @@ EOF
 
 function show_connection_info() {
   echo -e "\n✅ Hardened and ready!"
-  echo "Homarr: https://$BASE_DOMAIN"
-  echo "Cockpit: https://$BASE_DOMAIN:9090"
-  echo "Portainer: https://$BASE_DOMAIN:9443"
-  echo "Dockge: https://$BASE_DOMAIN:5001"
-  echo "PBX: https://$BASE_DOMAIN:5060"
+  echo "Homarr:     https://$BASE_DOMAIN"
+  echo "Cockpit:    https://cockpit.$BASE_DOMAIN"
+  echo "Portainer:  https://portainer.$BASE_DOMAIN"
+  echo "Dockge:     https://dockge.$BASE_DOMAIN"
+  echo "PBX:        https://pbx.$BASE_DOMAIN"
+  if [[ ${#TENANT_DOMAINS[@]} -gt 0 ]]; then
+    echo -e "\nTenants:"
+    for t in "${TENANT_DOMAINS[@]}"; do
+      echo "  https://$t"
+    done
+  fi
   IP=$(curl -4 -s ifconfig.me)
-  echo -e "\n🌐 Point your domain's A record to: $IP"
-  echo "Then use Certbot to generate SSL certificates for your domains."
+  echo -e "\n🌐 Point your domain's A record(s) to: $IP"
+  echo "Then use Certbot to generate SSL certificates for all domains and subdomains."
 }
 
 
@@ -257,7 +334,6 @@ prompt_for_base_domain
 prompt_for_tenant_domains
 deploy_reverse_proxy
 deploy_homarr
-
 # deploy_cockpit - 8.26 moved to harden.sh as part of inital server setup
 install_portainer
 deploy_dockge
