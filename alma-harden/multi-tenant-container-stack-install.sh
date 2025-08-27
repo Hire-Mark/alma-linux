@@ -349,9 +349,10 @@ function show_connection_info() {
   echo "Portainer:  https://portainer.$BASE_DOMAIN"
   echo "Dockge:     https://dockge.$BASE_DOMAIN"
   echo "PBX:        https://pbx.$BASE_DOMAIN"
-  if [[ ${#TENANT_DOMAINS[@]} -gt 0 ]]; then
+  TENANTS_SAFE=("${TENANT_DOMAINS[@]:-}")
+  if [[ ${#TENANTS_SAFE[@]} -gt 0 && -n "${TENANTS_SAFE[0]}" ]]; then
     echo -e "\nTenants:"
-    for t in "${TENANT_DOMAINS[@]}"; do
+    for t in "${TENANTS_SAFE[@]}"; do
       echo "  https://$t"
     done
   fi
