@@ -11,7 +11,7 @@ function log() {
 function launch_all_containers() {
     log "Launching all container stacks..."
 
-    for dir in reverse-proxy homarr cockpit portainer dockge pbx; do
+    for dir in reverse-proxy homarr portainer dockge pbx; do
         COMPOSE_FILE="$CONTAINERS_DIR/$dir/docker-compose.yml"
         if [ -f "$COMPOSE_FILE" ]; then
             log "Starting $dir..."

@@ -4,7 +4,7 @@ set -euo pipefail
 
 # === CONFIGURATION ===
 # Default base domain
-DEFAULT_BASE_DOMAIN="vps.hire-mark.com"
+DEFAULT_BASE_DOMAIN="lab.hire-mark.com"
 
 # Prompt for base domain at runtime
 function prompt_for_base_domain() {
@@ -17,7 +17,7 @@ function prompt_for_base_domain() {
   log "Using base domain: $BASE_DOMAIN"
 }
 # Default tenant domains
-DEFAULT_TENANT_DOMAINS=(lab.hire-mark.com tnt.h3webelements.com beta.h3webelements.com)
+DEFAULT_TENANT_DOMAINS=(dev.hire-mark.com tnt.hire-mark.com beta.hire-mark.com)
 
 # Prompt for tenant domains at runtime
 function prompt_for_tenant_domains() {
@@ -147,16 +147,26 @@ install_portainer() {
         log "Portainer is already running. Skipping."
         return
     fi
-    log "Installing Portainer on the host..."
-    docker volume create portainer_data
-    docker run -d \
-      -p 9443:9443 -p 9000:9000 \
-      --name=portainer \
-      --restart=always \
-      -v /var/run/docker.sock:/var/run/docker.sock \
-      -v portainer_data:/data \
-      portainer/portainer-ce:latest
-    log "Portainer installed and running on the host."
+    log "Deploying Portainer as a container..."
+    mkdir -p "$PORTAINER_DIR"
+    cat > "$PORTAINER_DIR/docker-compose.yml" <<EOF
+version: '3.8'
+services:
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    ports:
+      - "9443:9443"
+      - "9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    restart: always
+volumes:
+  portainer_data:
+EOF
+    docker compose -f "$PORTAINER_DIR/docker-compose.yml" up -d
+    log "Portainer deployed as a container."
 }
 
 function deploy_dockge() {
@@ -207,87 +217,7 @@ EOF
 }
 
 function configure_nginx_for_services() {
-    log "Configuring NGINX for service routing..."
-
-  # Homarr (main domain)
-  cat > "$NGINX_CONF_DIR/homarr.conf" <<EOF
-server {
-  listen 80;
-  server_name $BASE_DOMAIN;
-  location / {
-    proxy_pass http://homarr:7575;
-    proxy_set_header Host \$host;
-    proxy_set_header X-Real-IP \$remote_addr;
-  }
-}
-EOF
-
-  # Cockpit (subdomain)
-  cat > "$NGINX_CONF_DIR/cockpit.conf" <<EOF
-server {
-  listen 80;
-  server_name cockpit.$BASE_DOMAIN;
-  location / {
-    proxy_pass http://cockpit:9090;
-    proxy_set_header Host \$host;
-    proxy_set_header X-Real-IP \$remote_addr;
-  }
-}
-EOF
-
-  # Portainer (subdomain)
-  cat > "$NGINX_CONF_DIR/portainer.conf" <<EOF
-server {
-  listen 80;
-  server_name portainer.$BASE_DOMAIN;
-  location / {
-    proxy_pass http://localhost:9443;
-    proxy_set_header Host \$host;
-    proxy_set_header X-Real-IP \$remote_addr;
-  }
-}
-EOF
-
-  # Dockge (subdomain)
-  cat > "$NGINX_CONF_DIR/dockge.conf" <<EOF
-server {
-  listen 80;
-  server_name dockge.$BASE_DOMAIN;
-  location / {
-    proxy_pass http://dockge:5001;
-    proxy_set_header Host \$host;
-    proxy_set_header X-Real-IP \$remote_addr;
-  }
-}
-EOF
-
-  # PBX (subdomain)
-  cat > "$NGINX_CONF_DIR/pbx.conf" <<EOF
-server {
-  listen 80;
-  server_name pbx.$BASE_DOMAIN;
-  location / {
-    proxy_pass http://pbx:80;
-    proxy_set_header Host \$host;
-    proxy_set_header X-Real-IP \$remote_addr;
-  }
-}
-EOF
-
-  # Tenants (each on their own domain)
-  for t in "${TENANT_DOMAINS[@]}"; do
-    cat > "$NGINX_CONF_DIR/$t.conf" <<EOF
-server {
-  listen 80;
-  server_name $t;
-  location / {
-    proxy_pass http://web:80;
-    proxy_set_header Host \$host;
-    proxy_set_header X-Real-IP \$remote_addr;
-  }
-}
-EOF
-  done
+  log "NGINX subdomain routing is disabled. No configs generated."
 }
 
 function configure_homarr() {
@@ -295,15 +225,15 @@ function configure_homarr() {
     mkdir -p "$HOMARR_DIR/data"
     {
       echo "["
-      echo "  { \"name\": \"Homarr\",    \"url\": \"https://$BASE_DOMAIN\" },"
-      echo "  { \"name\": \"Cockpit\",   \"url\": \"https://cockpit.$BASE_DOMAIN\" },"
-      echo "  { \"name\": \"Portainer\", \"url\": \"https://portainer.$BASE_DOMAIN\" },"
-      echo "  { \"name\": \"Dockge\",    \"url\": \"https://dockge.$BASE_DOMAIN\" },"
-      echo "  { \"name\": \"PBX\",       \"url\": \"https://pbx.$BASE_DOMAIN\" }"
+      echo "  { \"name\": \"Homarr\",    \"url\": \"http://$BASE_DOMAIN:7575\" },"
+      echo "  { \"name\": \"Cockpit\",   \"url\": \"http://$BASE_DOMAIN:9090\" },"
+      echo "  { \"name\": \"Portainer\", \"url\": \"http://$BASE_DOMAIN:9443\" },"
+      echo "  { \"name\": \"Dockge\",    \"url\": \"http://$BASE_DOMAIN:5001\" },"
+      echo "  { \"name\": \"PBX\",       \"url\": \"http://$BASE_DOMAIN:5060\" }"
       TENANTS_SAFE=("${TENANT_DOMAINS[@]:-}")
       if [[ ${#TENANTS_SAFE[@]} -gt 0 && -n "${TENANTS_SAFE[0]}" ]]; then
         for t in "${TENANTS_SAFE[@]}"; do
-          echo ",  { \"name\": \"Tenant: $t\", \"url\": \"https://$t\" }"
+          echo ",  { \"name\": \"Tenant: $t\", \"url\": \"http://$BASE_DOMAIN:8080\" }"
         done
       fi
       echo "]"
@@ -313,12 +243,14 @@ function configure_homarr() {
 function deploy_tenants_example() {
     log "Creating example tenant folders and configs..."
     for t in "${TENANT_DOMAINS[@]}"; do
+      # Organize each tenant into its own folder named after the domain
+      FOLDER_NAME="$TENANTS_DIR/$t"
       if docker ps --format '{{.Names}}' | grep -q "^web-$t$"; then
         log "Tenant web container for $t is already running. Skipping."
         continue
       fi
-      mkdir -p "$TENANTS_DIR/$t"
-      cat > "$TENANTS_DIR/$t/docker-compose.yml" <<EOF
+      mkdir -p "$FOLDER_NAME"
+      cat > "$FOLDER_NAME/docker-compose.yml" <<EOF
 version: '3.8'
 services:
   web:
@@ -328,37 +260,29 @@ services:
       - "8080:80"
     restart: always
 EOF
-      cat > "$TENANTS_DIR/$t/nginx.conf" <<EOF
-server {
-  listen 80;
-  server_name $t;
-  location / {
-    proxy_pass http://web:80;
-    proxy_set_header Host \$host;
-    proxy_set_header X-Real-IP \$remote_addr;
-  }
-}
-EOF
     done
 }
 
 function show_connection_info() {
   echo -e "\n✅ Hardened and ready!"
-  echo "Homarr:     https://$BASE_DOMAIN"
-  echo "Cockpit:    https://cockpit.$BASE_DOMAIN"
-  echo "Portainer:  https://portainer.$BASE_DOMAIN"
-  echo "Dockge:     https://dockge.$BASE_DOMAIN"
-  echo "PBX:        https://pbx.$BASE_DOMAIN"
+  echo "Homarr:     http://$BASE_DOMAIN:7575"
+  echo "Cockpit:    http://$BASE_DOMAIN:9090"
+  echo "Portainer:  http://$BASE_DOMAIN:9443"
+  echo "Dockge:     http://$BASE_DOMAIN:5001"
+  echo "PBX:        http://$BASE_DOMAIN:5060"
   TENANTS_SAFE=("${TENANT_DOMAINS[@]:-}")
   if [[ ${#TENANTS_SAFE[@]} -gt 0 && -n "${TENANTS_SAFE[0]}" ]]; then
-    echo -e "\nTenants:"
+    echo -e "\nTenants (each in its own folder, access via port 8080):"
     for t in "${TENANTS_SAFE[@]}"; do
-      echo "  https://$t"
+      echo "  Folder: $TENANTS_DIR/$t"
+      echo "  Path:   $(realpath "$TENANTS_DIR/$t")"
+      echo "  URL:    http://$BASE_DOMAIN:8080"
+      echo
     done
   fi
   IP=$(curl -4 -s ifconfig.me)
   echo -e "\n🌐 Point your domain's A record(s) to: $IP"
-  echo "Then use Certbot to generate SSL certificates for all domains and subdomains."
+  echo "Access services using the above ports. SSL and subdomain routing are disabled."
 }
 
 
