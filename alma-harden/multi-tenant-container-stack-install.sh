@@ -142,14 +142,14 @@ services:
 EOF
 }
 
-install_portainer() {
-    if docker ps --format '{{.Names}}' | grep -q '^portainer$'; then
-        log "Portainer is already running. Skipping."
-        return
-    fi
-    log "Deploying Portainer as a container..."
-    mkdir -p "$PORTAINER_DIR"
-    cat > "$PORTAINER_DIR/docker-compose.yml" <<EOF
+function deploy_portainer() {
+  if docker ps --format '{{.Names}}' | grep -q '^portainer$'; then
+    log "Portainer is already running. Skipping."
+    return
+  fi
+  log "Deploying Portainer as a container..."
+  mkdir -p "$PORTAINER_DIR"
+  cat > "$PORTAINER_DIR/docker-compose.yml" <<EOF
 version: '3.8'
 services:
   portainer:
@@ -206,8 +206,8 @@ services:
       - "5060:5060/udp"
       - "5160:5160/udp"
       - "18000-18100:18000-18100/udp"
-      - "80:80"
-      - "443:443"
+      - "8080:80"
+      - "8443:443"
     environment:
       - RTP_START=18000
       - RTP_FINISH=18100
@@ -294,7 +294,7 @@ setup_directories
 deploy_reverse_proxy
 deploy_homarr
 # deploy_cockpit - 8.26 moved to harden.sh as part of inital server setup
-install_portainer
+deploy_portainer
 deploy_dockge
 deploy_pbx
 configure_nginx_for_services
