@@ -1,37 +1,63 @@
+# === AUTO-GENERATE NGINX CONFIGS ===
+function generate_nginx_configs() {
+  log "Generating NGINX reverse proxy configs for all services and tenants..."
+  mkdir -p "$REVERSE_PROXY_DIR/nginx/conf.d"
+  # Main services
+  cat > "$REVERSE_PROXY_DIR/nginx/conf.d/services.conf" <<EOF
+server {
+  listen 80;
+  server_name $BASE_DOMAIN;
+  location /homarr/ {
+    proxy_pass http://homarr:7575/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+  }
+  location /cockpit/ {
+    proxy_pass http://cockpit:9090/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+  }
+  location /portainer/ {
+    proxy_pass http://portainer:9443/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+  }
+  location /dockge/ {
+    proxy_pass http://dockge:5001/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+  }
+  location /pbx/ {
+    proxy_pass http://pbx:8080/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+  }
+}
+EOF
+  # Tenants
+  for t in "${TENANT_DOMAINS[@]}"; do
+    cat > "$REVERSE_PROXY_DIR/nginx/conf.d/tenant-$t.conf" <<TENANTCONF
+server {
+  listen 80;
+  server_name $t;
+  location / {
+    proxy_pass http://tenant-$t:8080/;
+    proxy_set_header Host \$host;
+    proxy_set_header X-Real-IP \$remote_addr;
+  }
+}
+TENANTCONF
+  done
+}
 #!/bin/bash
 
 set -euo pipefail
 
 # === CONFIGURATION ===
-# Default base domain
-DEFAULT_BASE_DOMAIN="lab.hire-mark.com"
-
-# Prompt for base domain at runtime
-function prompt_for_base_domain() {
-  read -p "Please enter the primary domain to configure for this server (e.g. example.com) [default: $DEFAULT_BASE_DOMAIN]: " INPUT_DOMAIN
-  if [[ -z "$INPUT_DOMAIN" ]]; then
-    BASE_DOMAIN="$DEFAULT_BASE_DOMAIN"
-  else
-    BASE_DOMAIN="$INPUT_DOMAIN"
-  fi
-  log "Using base domain: $BASE_DOMAIN"
-}
-# Default tenant domains
-DEFAULT_TENANT_DOMAINS=(dev.hire-mark.com tnt.hire-mark.com beta.hire-mark.com)
-
-# Prompt for tenant domains at runtime
-function prompt_for_tenant_domains() {
-  read -p "Enter tenant domains (comma-separated, or leave blank for default: ${DEFAULT_TENANT_DOMAINS[*]}): " DOMAINS_INPUT
-  if [[ -z "$DOMAINS_INPUT" ]]; then
-    TENANT_DOMAINS=("${DEFAULT_TENANT_DOMAINS[@]}")
-  else
-    IFS=',' read -ra TENANT_DOMAINS <<< "$DOMAINS_INPUT"
-    # Trim whitespace
-    for i in "${!TENANT_DOMAINS[@]}"; do
-      TENANT_DOMAINS[$i]="$(echo ${TENANT_DOMAINS[$i]} | xargs)"
-    done
-  fi
-}
+BASE_DOMAIN="lab.hire-mark.com"
+TENANT_DOMAIN1="tnt.hire-mark.com"
+TENANT_DOMAIN2="vps.h3webelements.com"
+TENANT_DOMAINS=("$TENANT_DOMAIN1" "$TENANT_DOMAIN2")
 CONTAINERS_DIR="/containers"
 REVERSE_PROXY_DIR="$CONTAINERS_DIR/reverse-proxy"
 HOMARR_DIR="$CONTAINERS_DIR/homarr"
@@ -77,6 +103,7 @@ function deploy_reverse_proxy() {
   fi
   log "Deploying NGINX reverse proxy with Certbot..."
   mkdir -p "$REVERSE_PROXY_DIR/nginx/conf.d"
+  generate_nginx_configs
   cat > "$REVERSE_PROXY_DIR/docker-compose.yml" <<EOF
 version: '3.8'
 services:
