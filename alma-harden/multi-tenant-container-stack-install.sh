@@ -250,28 +250,28 @@ server {
   server_name $BASE_DOMAIN;
   location /homarr/ {
     proxy_pass http://homarr:7575/;
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header Host \$host;
+    proxy_set_header X-Real-IP \$remote_addr;
   }
   location /cockpit/ {
     proxy_pass http://cockpit:9090/;
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header Host \$host;
+    proxy_set_header X-Real-IP \$remote_addr;
   }
   location /portainer/ {
     proxy_pass http://portainer:9443/;
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header Host \$host;
+    proxy_set_header X-Real-IP \$remote_addr;
   }
   location /dockge/ {
     proxy_pass http://dockge:5001/;
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header Host \$host;
+    proxy_set_header X-Real-IP \$remote_addr;
   }
   location /pbx/ {
     proxy_pass http://pbx:8080/;
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header Host \$host;
+    proxy_set_header X-Real-IP \$remote_addr;
   }
 }
 EOF
