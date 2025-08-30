@@ -1,54 +1,3 @@
-# === AUTO-GENERATE NGINX CONFIGS ===
-function generate_nginx_configs() {
-  log "Generating NGINX reverse proxy configs for all services and tenants..."
-  mkdir -p "$REVERSE_PROXY_DIR/nginx/conf.d"
-  # Main services
-  cat > "$REVERSE_PROXY_DIR/nginx/conf.d/services.conf" <<EOF
-server {
-  listen 80;
-  server_name $BASE_DOMAIN;
-  location /homarr/ {
-    proxy_pass http://homarr:7575/;
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-  }
-  location /cockpit/ {
-    proxy_pass http://cockpit:9090/;
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-  }
-  location /portainer/ {
-    proxy_pass http://portainer:9443/;
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-  }
-  location /dockge/ {
-    proxy_pass http://dockge:5001/;
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-  }
-  location /pbx/ {
-    proxy_pass http://pbx:8080/;
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-  }
-}
-EOF
-  # Tenants
-  for t in "${TENANT_DOMAINS[@]}"; do
-    cat > "$REVERSE_PROXY_DIR/nginx/conf.d/tenant-$t.conf" <<TENANTCONF
-server {
-  listen 80;
-  server_name $t;
-  location / {
-    proxy_pass http://tenant-$t:8080/;
-    proxy_set_header Host \$host;
-    proxy_set_header X-Real-IP \$remote_addr;
-  }
-}
-TENANTCONF
-  done
-}
 #!/bin/bash
 
 set -euo pipefail
@@ -290,6 +239,58 @@ EOF
     done
 }
 
+# === AUTO-GENERATE NGINX CONFIGS ===
+function generate_nginx_configs() {
+  log "Generating NGINX reverse proxy configs for all services and tenants..."
+  mkdir -p "$REVERSE_PROXY_DIR/nginx/conf.d"
+  # Main services
+  cat > "$REVERSE_PROXY_DIR/nginx/conf.d/services.conf" <<EOF
+server {
+  listen 80;
+  server_name $BASE_DOMAIN;
+  location /homarr/ {
+    proxy_pass http://homarr:7575/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+  }
+  location /cockpit/ {
+    proxy_pass http://cockpit:9090/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+  }
+  location /portainer/ {
+    proxy_pass http://portainer:9443/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+  }
+  location /dockge/ {
+    proxy_pass http://dockge:5001/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+  }
+  location /pbx/ {
+    proxy_pass http://pbx:8080/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+  }
+}
+EOF
+  # Tenants
+  for t in "${TENANT_DOMAINS[@]}"; do
+    cat > "$REVERSE_PROXY_DIR/nginx/conf.d/tenant-$t.conf" <<TENANTCONF
+server {
+  listen 80;
+  server_name $t;
+  location / {
+    proxy_pass http://tenant-$t:8080/;
+    proxy_set_header Host \$host;
+    proxy_set_header X-Real-IP \$remote_addr;
+  }
+}
+TENANTCONF
+  done
+}
+
 function show_connection_info() {
   echo -e "\n✅ Hardened and ready!"
   echo "Homarr:     http://$BASE_DOMAIN:7575"
@@ -314,8 +315,8 @@ function show_connection_info() {
 
 
 # === MAIN ===
-prompt_for_base_domain
-prompt_for_tenant_domains
+# prompt_for_base_domain
+# prompt_for_tenant_domains
 install_docker_stack
 setup_directories
 deploy_reverse_proxy
