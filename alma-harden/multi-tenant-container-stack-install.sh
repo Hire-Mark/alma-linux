@@ -208,7 +208,7 @@ function configure_homarr() {
       echo "  { \"name\": \"PBX\",       \"url\": \"http://$BASE_DOMAIN:5060\" }"
       TENANTS_SAFE=("${TENANT_DOMAINS[@]:-}")
       if [[ ${#TENANTS_SAFE[@]} -gt 0 && -n "${TENANTS_SAFE[0]}" ]]; then
-        local port=8080
+  local port=9000
         for t in "${TENANTS_SAFE[@]}"; do
           echo ",  { \"name\": \"Tenant: $t\", \"url\": \"http://$BASE_DOMAIN:${port}\" }"
           ((port++))
@@ -220,7 +220,7 @@ function configure_homarr() {
 
 function deploy_tenants_example() {
     log "Creating example tenant folders and configs..."
-    local port=8080
+  local port=9000
     for t in "${TENANT_DOMAINS[@]}"; do
       FOLDER_NAME="$TENANTS_DIR/$t"
       if docker ps --format '{{.Names}}' | grep -q "^web-$t$"; then
