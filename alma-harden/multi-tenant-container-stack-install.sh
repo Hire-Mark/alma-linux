@@ -4,9 +4,9 @@ set -euo pipefail
 
 # === CONFIGURATION ===
 BASE_DOMAIN="lab.hire-mark.com"
-TENANT_DOMAIN1="tnt.hire-mark.com"
-TENANT_DOMAIN2="vps.h3webelements.com"
-TENANT_DOMAINS=("$TENANT_DOMAIN1" "$TENANT_DOMAIN2")
+TENANT_DOMAIN1=""
+TENANT_DOMAIN2=""
+TENANT_DOMAINS=("$BASE_DOMAIN")
 CONTAINERS_DIR="/containers"
 REVERSE_PROXY_DIR="$CONTAINERS_DIR/reverse-proxy"
 HOMARR_DIR="$CONTAINERS_DIR/homarr"
@@ -42,7 +42,7 @@ function install_docker_stack() {
 
 function setup_directories() {
     log "Setting up container directories..."
-    mkdir -p "$REVERSE_PROXY_DIR" "$HOMARR_DIR" "$COCKPIT_DIR" "$PORTAINER_DIR" "$DOCKGE_DIR" "$PBX_DIR" "$TENANTS_DIR"
+    mkdir -p "$REVERSE_PROXY_DIR" "$HOMARR_DIR" "$COCKPIT_DIR" "$PORTAINER_DIR" "$DOCKGE_DIR" "$PBX_DIR" #"$TENANTS_DIR"
 }
 
 function deploy_reverse_proxy() {
@@ -331,5 +331,5 @@ deploy_dockge
 deploy_pbx
 configure_nginx_for_services
 configure_homarr
-deploy_tenants_example
+# deploy_tenants_example
 show_connection_info
