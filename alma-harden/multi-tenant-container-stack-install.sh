@@ -88,13 +88,15 @@ function deploy_homarr() {
 version: '3.8'
 services:
   homarr:
-    image: ghcr.io/ajnart/homarr:latest
+    image: ghcr.io/homarr-labs/homarr:latest
     container_name: homarr
     ports:
       - "7575:7575"
     volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
       - ./data:/app/data/configs
     environment:
+      - SECRET_ENCRYPTION_KEY=3d92814d556976ce9114147fe7e77ac670d87dfd756a0f53c4788c48bf9daaa2
       - BASE_URL=https://$BASE_DOMAIN
     restart: always
 EOF
