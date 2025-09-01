@@ -228,6 +228,13 @@ function generate_nginx_configs() {
 server {
   listen 80;
   server_name $BASE_DOMAIN;
+  # Route / to the default tenant container
+  location / {
+    proxy_pass http://tenant-$BASE_DOMAIN:36501/;
+    proxy_set_header Host \$host;
+    proxy_set_header X-Real-IP \$remote_addr;
+  }
+  # Service paths
   location /homarr/ {
     proxy_pass http://homarr:7575/;
     proxy_set_header Host \$host;
@@ -248,7 +255,6 @@ server {
     proxy_set_header Host \$host;
     proxy_set_header X-Real-IP \$remote_addr;
   }
-  
 }
 EOF
   # Tenants
