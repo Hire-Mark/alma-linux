@@ -42,7 +42,7 @@ function install_docker_stack() {
 
 function setup_directories() {
     log "Setting up container directories..."
-    mkdir -p "$REVERSE_PROXY_DIR" "$HOMARR_DIR" "$COCKPIT_DIR" "$PORTAINER_DIR" "$DOCKGE_DIR" "$PBX_DIR" #"$TENANTS_DIR"
+    mkdir -p "$REVERSE_PROXY_DIR" "$HOMARR_DIR" "$COCKPIT_DIR" "$PORTAINER_DIR" "$DOCKGE_DIR" "$PBX_DIR" "$TENANTS_DIR"
 }
 
 function deploy_reverse_proxy() {
@@ -210,7 +210,7 @@ function configure_homarr() {
       echo "  { \"name\": \"PBX\",       \"url\": \"http://$BASE_DOMAIN:5060\" }"
       TENANTS_SAFE=("${TENANT_DOMAINS[@]:-}")
       if [[ ${#TENANTS_SAFE[@]} -gt 0 && -n "${TENANTS_SAFE[0]}" ]]; then
-  local port=9000
+  local port=36501
         for t in "${TENANTS_SAFE[@]}"; do
           echo ",  { \"name\": \"Tenant: $t\", \"url\": \"http://$BASE_DOMAIN:${port}\" }"
           ((port++))
@@ -288,7 +288,7 @@ server {
   listen 80;
   server_name $t;
   location / {
-    proxy_pass http://tenant-$t:8080/;
+    proxy_pass http://tenant-$t:36501/;
     proxy_set_header Host \$host;
     proxy_set_header X-Real-IP \$remote_addr;
   }
@@ -330,8 +330,8 @@ deploy_homarr
 # deploy_cockpit - 8.26 moved to harden.sh as part of inital server setup
 deploy_portainer
 deploy_dockge
-deploy_pbx
+#deploy_pbx
 configure_nginx_for_services
 configure_homarr
-# deploy_tenants_example
+#deploy_tenants_example
 show_connection_info
