@@ -17,7 +17,7 @@ bash <(curl -s https://raw.githubusercontent.com/hire-mark/alma-harden/main/hard
 
 **2. Install and configure containers (run after hardening):**
 ```bash
-bash <(curl -s https://raw.githubusercontent.com/hire-mark/alma-harden/main/harden-full-install.sh)
+bash <(curl -s https://raw.githubusercontent.com/hire-mark/alma-harden/main/default-containers.sh)
 ```
 
 **Combined one-liner:**
