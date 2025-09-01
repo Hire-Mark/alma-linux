@@ -13,7 +13,7 @@ HOMARR_DIR="$CONTAINERS_DIR/homarr"
 COCKPIT_DIR="$CONTAINERS_DIR/cockpit"
 PORTAINER_DIR="$CONTAINERS_DIR/portainer"
 DOCKGE_DIR="$CONTAINERS_DIR/dockge"
-PBX_DIR="$CONTAINERS_DIR/pbx"
+#PBX_DIR="$CONTAINERS_DIR/pbx"
 TENANTS_DIR="$CONTAINERS_DIR/tenants"
 NGINX_CONF_DIR="$REVERSE_PROXY_DIR/nginx/conf.d"
 
@@ -168,32 +168,6 @@ services:
 EOF
 }
 
-function deploy_pbx() {
-  if docker ps --format '{{.Names}}' | grep -q '^pbx$'; then
-    log "PBX is already running. Skipping."
-    return
-  fi
-  log "Deploying FreePBX (tiredofit/freepbx)..."
-  cat > "$PBX_DIR/docker-compose.yml" <<EOF
-version: '3.8'
-services:
-  pbx:
-    image: tiredofit/freepbx:latest
-    container_name: pbx
-    ports:
-      - "5060:5060/udp"
-      - "5160:5160/udp"
-      - "18000-18100:18000-18100/udp"
-      - "8080:80"
-      - "8443:443"
-    environment:
-      - RTP_START=18000
-      - RTP_FINISH=18100
-      - ASTERISK_VERSION=18
-    restart: always
-EOF
-}
-
 function configure_nginx_for_services() {
   log "NGINX subdomain routing is disabled. No configs generated."
 }
@@ -207,7 +181,7 @@ function configure_homarr() {
       echo "  { \"name\": \"Cockpit\",   \"url\": \"http://$BASE_DOMAIN:9090\" },"
       echo "  { \"name\": \"Portainer\", \"url\": \"http://$BASE_DOMAIN:9443\" },"
       echo "  { \"name\": \"Dockge\",    \"url\": \"http://$BASE_DOMAIN:5001\" },"
-      echo "  { \"name\": \"PBX\",       \"url\": \"http://$BASE_DOMAIN:5060\" }"
+      #echo "  { \"name\": \"PBX\",       \"url\": \"http://$BASE_DOMAIN:5060\" }"
       TENANTS_SAFE=("${TENANT_DOMAINS[@]:-}")
       if [[ ${#TENANTS_SAFE[@]} -gt 0 && -n "${TENANTS_SAFE[0]}" ]]; then
   local port=36501
@@ -274,11 +248,7 @@ server {
     proxy_set_header Host \$host;
     proxy_set_header X-Real-IP \$remote_addr;
   }
-  location /pbx/ {
-    proxy_pass http://pbx:8080/;
-    proxy_set_header Host \$host;
-    proxy_set_header X-Real-IP \$remote_addr;
-  }
+  
 }
 EOF
   # Tenants
@@ -303,14 +273,14 @@ function show_connection_info() {
   echo "Cockpit:    http://$BASE_DOMAIN:9090"
   echo "Portainer:  http://$BASE_DOMAIN:9443"
   echo "Dockge:     http://$BASE_DOMAIN:5001"
-  echo "PBX:        http://$BASE_DOMAIN:5060"
+  #echo "PBX:        http://$BASE_DOMAIN:5060"
   TENANTS_SAFE=("${TENANT_DOMAINS[@]:-}")
   if [[ ${#TENANTS_SAFE[@]} -gt 0 && -n "${TENANTS_SAFE[0]}" ]]; then
     echo -e "\nTenants (each in its own folder, access via port 8080):"
     for t in "${TENANTS_SAFE[@]}"; do
       echo "  Folder: $TENANTS_DIR/$t"
       echo "  Path:   $(realpath "$TENANTS_DIR/$t")"
-      echo "  URL:    http://$BASE_DOMAIN:8080"
+      echo "  URL:    http://$BASE_DOMAIN:36501"
       echo
     done
   fi
