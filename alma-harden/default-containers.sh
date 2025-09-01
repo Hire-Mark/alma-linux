@@ -230,7 +230,7 @@ server {
   server_name $BASE_DOMAIN;
   # Route / to the default tenant container
   location / {
-    proxy_pass http://tenant-$BASE_DOMAIN:36501/;
+    proxy_pass http://$BASE_DOMAIN:36501/;
     proxy_set_header Host \$host;
     proxy_set_header X-Real-IP \$remote_addr;
   }
@@ -264,7 +264,7 @@ server {
   listen 80;
   server_name $t;
   location / {
-    proxy_pass http://tenant-$t:36501/;
+    proxy_pass http://$t:36501/;
     proxy_set_header Host \$host;
     proxy_set_header X-Real-IP \$remote_addr;
   }
