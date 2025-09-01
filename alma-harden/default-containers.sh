@@ -42,7 +42,7 @@ function install_docker_stack() {
 
 function setup_directories() {
     log "Setting up container directories..."
-    mkdir -p "$REVERSE_PROXY_DIR" "$HOMARR_DIR" "$COCKPIT_DIR" "$PORTAINER_DIR" "$DOCKGE_DIR" "$PBX_DIR" "$TENANTS_DIR"
+    mkdir -p "$REVERSE_PROXY_DIR" "$HOMARR_DIR" "$COCKPIT_DIR" "$PORTAINER_DIR" "$DOCKGE_DIR" "$TENANTS_DIR"
 }
 
 function deploy_reverse_proxy() {
