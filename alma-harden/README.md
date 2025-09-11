@@ -37,3 +37,15 @@ sudo chmod +x /opt/startup/containers-up.sh
 ```
 sudo /opt/startup/containers-up.sh
 ```
+## Docker Networking & Service Name Proxying
+
+All containers are deployed on a shared Docker network (`appnet`) for secure, service-name-based communication. NGINX proxy configs use Docker service names (not localhost or static IPs) for routing requests to tenant apps and services.
+
+Example NGINX config:
+```nginx
+location / {
+	proxy_pass http://web-<tenant>:80;
+}
+```
+
+This ensures reliable networking and easy scaling for multi-tenant deployments.

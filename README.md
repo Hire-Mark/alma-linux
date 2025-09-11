@@ -18,7 +18,14 @@ alma-linux/<br>
 
 
 ## 🚀 One-Liner Remote Installs
+## 🐳 Docker Networking Built-In
 
+All containers and tenant apps are deployed on a shared Docker network (`appnet`). NGINX proxy configs use Docker service names for routing, ensuring secure and reliable inter-container communication from the start.
+
+No need to use localhost or static IPs—just reference the service name in your NGINX configs:
+```nginx
+proxy_pass http://web-<tenant>:80;
+```
 ## 🔧 Initial Hardening (Run as root on fresh AlmaLinux VPS)
 
 Creates a new admin user, randomizes SSH port, disables root login, and enables password login.

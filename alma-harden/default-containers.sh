@@ -54,11 +54,12 @@ function deploy_reverse_proxy() {
   mkdir -p "$REVERSE_PROXY_DIR/nginx/conf.d"
   generate_nginx_configs
   cat > "$REVERSE_PROXY_DIR/docker-compose.yml" <<EOF
-version: '3.8'
-services:
+ervices:
   nginx:
     image: nginx:alpine
     container_name: reverse-proxy
+    networks:
+      - appnet
     ports:
       - "80:80"
       - "443:443"
@@ -70,11 +71,16 @@ services:
     restart: always
   certbot:
     image: certbot/certbot
+    networks:
+      - appnet
     volumes:
       - ./certbot/www:/var/www/certbot
       - ./certbot/conf:/etc/letsencrypt
     entrypoint: ""
     command: "tail -f /dev/null"
+networks:
+  appnet:
+    driver: bridge
 EOF
 }
 
@@ -85,7 +91,7 @@ function deploy_homarr() {
   fi
   log "Deploying Homarr..."
   cat > "$HOMARR_DIR/docker-compose.yml" <<EOF
-version: '3.8'
+
 services:
   homarr:
     image: ghcr.io/homarr-labs/homarr:latest
@@ -109,7 +115,7 @@ function deploy_cockpit() {
   fi
   log "Deploying Cockpit (via podman/cockpit-ws)..."
   cat > "$COCKPIT_DIR/docker-compose.yml" <<EOF
-version: '3.8'
+#version: '3.8'
 services:
   cockpit:
     image: ghcr.io/cockpit-project/cockpit:latest
@@ -128,7 +134,7 @@ function deploy_portainer() {
   log "Deploying Portainer as a container..."
   mkdir -p "$PORTAINER_DIR"
   cat > "$PORTAINER_DIR/docker-compose.yml" <<EOF
-version: '3.8'
+#version: '3.8'
 services:
   portainer:
     image: portainer/portainer-ce:latest
@@ -154,7 +160,7 @@ function deploy_dockge() {
   fi
   log "Deploying Dockge..."
   cat > "$DOCKGE_DIR/docker-compose.yml" <<EOF
-version: '3.8'
+#version: '3.8'
 services:
   dockge:
     image: louislam/dockge:latest
@@ -206,14 +212,19 @@ function deploy_tenants_example() {
       fi
       mkdir -p "$FOLDER_NAME"
       cat > "$FOLDER_NAME/docker-compose.yml" <<EOF
-version: '3.8'
+#version: '3.8'
 services:
   web:
     image: nginx:alpine
     container_name: web-$t
+    networks:
+      - appnet
     ports:
       - "${port}:80"
     restart: always
+networks:
+  appnet:
+    driver: bridge
 EOF
       ((port++))
     done
@@ -227,14 +238,20 @@ function generate_nginx_configs() {
   cat > "$REVERSE_PROXY_DIR/nginx/conf.d/services.conf" <<EOF
 server {
   listen 80;
+  listen 443 ssl;
   server_name $BASE_DOMAIN;
-  # Route / to the default tenant container
+
+  ssl_certificate /etc/letsencrypt/live/$BASE_DOMAIN/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/$BASE_DOMAIN/privkey.pem;
+  ssl_protocols TLSv1.2 TLSv1.3;
+  ssl_ciphers HIGH:!aNULL:!MD5;
+
+  # Route / to the default tenant container using Docker service name
   location / {
-    proxy_pass http://$BASE_DOMAIN:36501/;
+    proxy_pass http://web-$BASE_DOMAIN:80/;
     proxy_set_header Host \$host;
     proxy_set_header X-Real-IP \$remote_addr;
   }
-  
 }
 EOF
   # Tenants
@@ -242,9 +259,16 @@ EOF
     cat > "$REVERSE_PROXY_DIR/nginx/conf.d/tenant-$t.conf" <<TENANTCONF
 server {
   listen 80;
+  listen 443 ssl;
   server_name $t;
+
+  ssl_certificate /etc/letsencrypt/live/$t/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/$t/privkey.pem;
+  ssl_protocols TLSv1.2 TLSv1.3;
+  ssl_ciphers HIGH:!aNULL:!MD5;
+
   location / {
-    proxy_pass http://$t:36501/;
+    proxy_pass http://web-$t:80/;
     proxy_set_header Host \$host;
     proxy_set_header X-Real-IP \$remote_addr;
   }
@@ -287,7 +311,7 @@ deploy_homarr
 deploy_portainer
 deploy_dockge
 #deploy_pbx
-configure_nginx_for_services
+#configure_nginx_for_services
 configure_homarr
 #deploy_tenants_example
 show_connection_info
